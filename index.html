@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef4ff">
+<meta name="format-detection" content="telephone=no">
+<title>دفتر فنی و مهندسی بهاران تصفیه</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- حباب‌های تزئینی پس‌زمینه -->
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+
+<!-- ============================================================
+     نمایش عمومی: فرم ثبت درخواست مشتری
+     ============================================================ -->
+<div id="publicView" class="hidden">
+  <div class="wrap narrow">
+    <div class="brand" style="justify-content:center;margin:26px 0 20px">
+      <div class="logo">ب</div>
+      <div>
+        <h1>دفتر فنی و مهندسی بهاران تصفیه</h1>
+        <small>فرم ثبت درخواست خدمت</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;font-size:17px">ثبت درخواست جدید</h2>
+      <p class="muted small" style="margin:0 0 18px">
+        اطلاعات خود را وارد کنید. درخواست شما بر اساس زمان ثبت، اولویت‌بندی می‌شود.
+      </p>
+
+      <form id="publicForm" novalidate>
+        <div class="grid">
+          <div>
+            <label>نام و نام خانوادگی *</label>
+            <input id="pubName" autocomplete="name" placeholder="مثلاً علی رضایی">
+          </div>
+          <div>
+            <label>شماره تماس *</label>
+            <input id="pubPhone" inputmode="tel" autocomplete="tel" placeholder="۰۹۱۲۳۴۵۶۷۸۹">
+          </div>
+          <div>
+            <label>خدمت درخواستی *</label>
+            <input id="pubService" placeholder="مثلاً نصب و راه‌اندازی دستگاه تصفیه">
+          </div>
+          <div>
+            <label>تاریخ درخواستی</label>
+            <input id="pubDate" type="date">
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label>توضیحات</label>
+          <textarea id="pubNote" rows="3" placeholder="توضیحات تکمیلی (اختیاری)"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">ثبت درخواست</button>
+        </div>
+      </form>
+
+      <div id="publicResult" class="hidden"></div>
+    </div>
+
+    <p class="center small" style="margin:16px 0 30px">
+      <a href="#" id="backToApp">ورود به پنل مدیریت</a>
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================
+     پنل مدیریت
+     ============================================================ -->
+<div id="appView">
+  <div class="wrap">
+
+    <header class="top">
+      <div class="brand">
+        <div class="logo">ب</div>
+        <div>
+          <h1>دفتر فنی و مهندسی بهاران تصفیه</h1>
+          <small>مدیریت مشتریان، خدمات و مالی</small>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost sm" id="btnOpenPublic">فرم درخواست مشتری</button>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="dashboard">داشبورد</button>
+      <button class="tab" data-tab="customers">مشتریان</button>
+      <button class="tab" data-tab="services">خدمات</button>
+      <button class="tab" data-tab="finance">مالی</button>
+      <button class="tab" data-tab="invoices">فاکتور</button>
+      <button class="tab" data-tab="request">لینک و تنظیمات</button>
+    </nav>
+
+    <main>
+      <!-- ============ داشبورد ============ -->
+      <section class="tab-panel" id="tab-dashboard">
+        <div class="stats" id="stats"></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head">
+              <h2>نوبت‌های در انتظار</h2>
+              <span class="hint">اولویت بر اساس زمان ثبت</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>اولویت</th><th>مشتری</th><th>خدمت</th><th>تاریخ</th></tr></thead>
+                <tbody id="dashServices"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>آخرین درآمدها</h2></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>شرح</th><th>مبلغ</th><th>تاریخ</th></tr></thead>
+                <tbody id="dashFinance"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ مشتریان ============ -->
+      <section class="tab-panel hidden" id="tab-customers">
+        <div class="card">
+          <div class="card-head">
+            <h2>جدول مشتریان</h2>
+            <div class="toolbar">
+              <input id="customerSearch" placeholder="جستجو: نام، شماره، آدرس">
+              <button class="btn primary" id="btnAddCustomer">+ مشتری جدید</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="wide">
+              <thead>
+                <tr>
+                  <th>#</th><th>نام</th><th>شماره تماس</th><th>آدرس</th>
+                  <th>تاریخ ثبت</th><th>خدمات</th><th>اقلام مصرفی</th><th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ خدمات ============ -->
+      <section class="tab-panel hidden" id="tab-services">
+        <div class="card">
+          <div class="card-head">
+            <h2>جدول خدمات ارائه‌شده</h2>
+            <div class="toolbar">
+              <select id="serviceFilter">
+                <option value="all">همه خدمات</option>
+                <option value="pending">در انتظار</option>
+                <option value="done">انجام‌شده</option>
+              </select>
+              <input id="serviceSearch" placeholder="جستجو...">
+              <button class="btn primary" id="btnAddService">+ ثبت خدمت</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="wide">
+              <thead>
+                <tr>
+                  <th>اولویت</th><th>نام مشتری</th><th>شماره تماس</th>
+                  <th>خدمت درخواستی</th><th>تاریخ درخواست</th>
+                  <th>وضعیت</th><th>منبع</th><th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="servicesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ مالی ============ -->
+      <section class="tab-panel hidden" id="tab-finance">
+        <div class="card">
+          <div class="card-head">
+            <h2>جدول مالی (درآمدها)</h2>
+            <div class="toolbar">
+              <input id="financeSearch" placeholder="جستجو...">
+              <button class="btn primary" id="btnAddIncome">+ ثبت درآمد</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>تاریخ</th><th>شرح</th><th>مشتری</th><th>مبلغ</th><th>منبع</th><th>عملیات</th></tr>
+              </thead>
+              <tbody id="financeBody"></tbody>
+            </table>
+          </div>
+          <div class="total-bar">مجموع درآمد: <strong id="financeTotal">۰ تومان</strong></div>
+        </div>
+      </section>
+
+      <!-- ============ فاکتور ============ -->
+      <section class="tab-panel hidden" id="tab-invoices">
+        <div class="card">
+          <div class="card-head">
+            <h2>طراحی فاکتور فروش</h2>
+            <span class="hint">پیش‌نمایش زنده در پایین صفحه</span>
+          </div>
+
+          <div class="grid">
+            <div><label>مشتری *</label><select id="invCustomer"></select></div>
+            <div><label>تاریخ فاکتور</label><input id="invDate" type="date"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <label>اقلام فاکتور</label>
+            <div class="table-wrap">
+              <table class="mini">
+                <thead>
+                  <tr>
+                    <th>شرح خدمت / کالا</th>
+                    <th style="width:130px">تعداد</th>
+                    <th style="width:150px">قیمت واحد (تومان)</th>
+                    <th style="width:130px">جمع</th>
+                    <th style="width:70px"></th>
+                  </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+              </table>
+            </div>
+            <button class="btn ghost sm" id="btnAddItem" type="button" style="margin-top:10px">+ افزودن ردیف</button>
+          </div>
+
+          <div class="grid" style="margin-top:16px">
+            <div><label>تخفیف (تومان)</label><input id="invDiscount" type="number" min="0" step="1000" value="0"></div>
+            <div><label>مالیات (درصد)</label><input id="invTax" type="number" min="0" step="1" value="0"></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label>توضیحات فاکتور</label>
+            <input id="invNote" placeholder="اختیاری">
+          </div>
+
+          <div class="total-bar" style="justify-content:space-between">
+            <span>مبلغ نهایی: <strong id="invTotalLive">۰ تومان</strong></span>
+            <span class="small muted">جمع جزء: <span id="invSubtotal">۰</span> تومان</span>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn primary" id="btnSaveInvoice">ذخیره فاکتور و ثبت درآمد</button>
+            <button class="btn ghost" id="btnPreviewInvoice">پیش‌نمایش</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>پیش‌نمایش فاکتور</h2></div>
+          <div class="invoice-paper"><div id="invoicePreview"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>فاکتورهای صادرشده</h2></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>شماره</th><th>تاریخ</th><th>مشتری</th><th>مبلغ نهایی</th><th>تعداد اقلام</th><th>عملیات</th></tr>
+              </thead>
+              <tbody id="invoicesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ لینک و تنظیمات ============ -->
+      <section class="tab-panel hidden" id="tab-request">
+        <div class="card">
+          <div class="card-head"><h2>لینک ثبت درخواست مشتری</h2></div>
+          <p class="muted small" style="margin:0 0 12px">
+            این لینک را برای مشتریان بفرستید. درخواست‌های ثبت‌شده به‌طور خودکار در جدول خدمات و
+            بر اساس زمان ثبت اولویت‌بندی می‌شوند.
+          </p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="publicLinkInput" readonly style="flex:1 1 240px">
+            <button class="btn primary" id="btnCopyLink">کپی لینک</button>
+            <button class="btn ghost" id="btnOpenPublic2">مشاهده فرم</button>
+          </div>
+          <div id="localWarn" class="local-warn hidden">
+            <strong>توجه:</strong> شما در حال مشاهده‌ی فایل به‌صورت محلی هستید (<code>file://</code>).
+            لینک ساخته‌شده فقط روی همین دستگاه کار می‌کند. برای ارسال به مشتریان، ابتدا سایت را روی
+            یک هاست/سرور قرار دهید و از آدرس نهایی (https) استفاده کنید.
+          </div>
+        </div>
+
+        < class="card">
+          <div class="card-head"><h2>تنظیمات فاکتور</h2></div>
+          <div class="grid">
+            <div><label>پیشوند شماره فاکتور</label><input id="setPrefix" placeholder="BH"></div>
+            <div><label>شماره فاکتور بعدی</label><input id="setNext" type="number" min="1" step="1"></div>
+             <div><label>شماره کارت</label><input id="setCardNumber" placeholder="6037-9975-1234-5678" dir="ltr"></div>
+    <div><label>صاحب کارت</label><input id="setCardHolder" placeholder="نام صاحب کارت"></div>
+  </div>
+          
+      </div>
+          <div class="form-actions">
+            <button class="btn primary" id="btnSaveSettings">ذخیره تنظیمات</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>پشتیبان‌گیری</h2></div>
+          <p class="muted small" style="margin:0 0 12px">
+            اطلاعات در مرورگر همین دستگاه ذخیره می‌شود. برای امنیت بیشتر نسخه پشتیبان بگیرید.
+          </p>
+          <div class="form-actions" style="margin-top:0">
+            <button class="btn ghost" id="btnBackup">دانلود پشتیبان (JSON)</button>
+            <label class="btn ghost" style="margin:0;cursor:pointer">
+              بازیابی از فایل
+              <input type="file" id="restoreFile" accept="application/json" style="display:none">
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- مودال -->
+<div id="modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle"></h3>
+      <button class="icon-btn" data-close aria-label="بستن">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ناحیه چاپ -->
+<div id="printArea"></div>
+
+<!-- پیام شناور -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============================================================
+     اسکریپت‌ها — ترتیب بارگذاری مهم است!
+     utils → storage → ui → بقیه ماژول‌ها → app
+     ============================================================ -->
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/customers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/finance.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/invoices.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/public-form.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
