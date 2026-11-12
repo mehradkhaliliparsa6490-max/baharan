@@ -1,20 +1,19 @@
 /* ============================================================
-   finance.js — جدول درآمدها + فرم ثبت درآمد دستی
+   finance.js — درآمدها با پشتیبانی از تاریخ شمسی
    ============================================================ */
 (function (B) {
   'use strict';
 
-  const { $, toFa, esc, toNum, money, uid, todayISO, jalali, toast } = B.utils;
+  const { $, toFa, esc, toNum, money, uid, todayISO, todayJalaliInput,
+          jalali, jalaliToGregorianIso } = B.utils;
   const { openModal, closeModal, bindEnter, renderAll } = B.ui;
   const { saveDB } = B.storage;
 
-  /* ---------- جدول مالی ---------- */
   function render() {
     const tbody = $('#financeBody');
     if (!tbody) return;
 
     const q = ($('#financeSearch')?.value || '').trim().toLowerCase();
-
     let list = [...B.db.finances].sort((a, b) => {
       const d = String(b.date || '').localeCompare(String(a.date || ''));
       return d !== 0 ? d : (b.createdAt || 0) - (a.createdAt || 0);
@@ -50,7 +49,6 @@
     if (totalEl) totalEl.textContent = money(total) + ' تومان';
   }
 
-  /* ---------- فرم درآمد دستی ---------- */
   function openForm() {
     const options = B.db.customers
       .map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
@@ -59,8 +57,8 @@
       <form id="incomeForm" novalidate>
         <div class="grid">
           <div><label>شرح *</label><input id="fTitle" placeholder="مثلاً سرویس دوره‌ای دستگاه"></div>
-          <div><label>مبلغ (تومان) *</label><input id="fAmount" type="number" min="0" step="1000" placeholder="0"></div>
-          <div><label>تاریخ</label><input id="fDate" type="date" value="${todayISO()}"></div>
+          <div><label>مبلغ (تومان) *</label><input id="fAmount" class="num-input" type="text" inputmode="numeric" placeholder="۰"></div>
+          <div><label>تاریخ (شمسی)</label><input id="fDate" class="jalali-date" value="${todayJalaliInput()}" placeholder="۱۴۰۳/۰۱/۰۱" dir="ltr" style="text-align:right"></div>
           <div>
             <label>مشتری (اختیاری)</label>
             <select id="fCustomer"><option value="">—</option>${options}</select>
@@ -82,7 +80,7 @@
       saveBtn.onclick = () => {
         const title = $('#fTitle').value.trim();
         const amount = toNum($('#fAmount').value);
-        const date = $('#fDate').value || todayISO();
+        const dateISO = jalaliToGregorianIso($('#fDate').value);
         const customerId = $('#fCustomer').value;
         const customer = B.db.customers.find(c => c.id === customerId) || null;
         const note = $('#fNote').value.trim();
@@ -91,7 +89,7 @@
         if (amount <= 0) return toast('مبلغ معتبر وارد کنید');
 
         B.db.finances.push({
-          id: uid(), title, amount, date,
+          id: uid(), title, amount, date: dateISO,
           customerId: customer ? customer.id : '',
           customerName: customer ? customer.name : '',
           note, source: 'manual', createdAt: Date.now()
@@ -108,7 +106,6 @@
     });
   }
 
-  /* ---------- حذف درآمد دستی ---------- */
   function remove(id) {
     if (!confirm('این درآمد حذف شود؟')) return;
     B.db.finances = B.db.finances.filter(x => x.id !== id);

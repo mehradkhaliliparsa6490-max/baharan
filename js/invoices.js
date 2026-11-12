@@ -1,22 +1,22 @@
 /* ============================================================
-   invoices.js — ساخت، پیش‌نمایش، ذخیره و چاپ فاکتور
+   invoices.js — فاکتور با پشتیبانی کامل از اعداد و تاریخ شمسی
    ============================================================ */
 (function (B) {
   'use strict';
 
-  const { $, $$, toFa, esc, toNum, money, uid, todayISO, jalali, toast } = B.utils;
+  const { $, $$, toFa, esc, toNum, money, uid, todayISO, todayJalaliInput,
+          jalali, jalaliToGregorianIso } = B.utils;
   const { openModal, closeModal } = B.ui;
   const { saveDB } = B.storage;
 
-  /* ---------- افزودن ردیف ---------- */
   function addRow(title = '', qty = 1, price = '') {
     const tbody = $('#itemsBody');
     if (!tbody) return;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input class="i-title" placeholder="شرح خدمت / کالا" value="${esc(title)}"></td>
-      <td><input class="i-qty" type="number" min="1" step="1" value="${toFa(qty)}"></td>
-      <td><input class="i-price" type="number" min="0" step="1000" value="${esc(price)}" placeholder="0"></td>
+      <td><input class="i-qty num-input" type="text" inputmode="numeric" value="${toFa(qty)}"></td>
+      <td><input class="i-price num-input" type="text" inputmode="numeric" value="${toFa(price)}" placeholder="۰"></td>
       <td class="row-total" style="font-weight:700">۰</td>
       <td><button type="button" class="btn danger sm" data-remove-row>حذف</button></td>`;
     tbody.appendChild(tr);
@@ -48,7 +48,6 @@
     renderPreview();
   }
 
-  /* ---------- ساخت HTML فاکتور (با اطلاعات پرداخت) ---------- */
   function buildHTML(d) {
     const items = Array.isArray(d.items) ? d.items : [];
     const rows = items.length
@@ -67,7 +66,6 @@
     const subtotal = toNum(d.subtotal);
     const total = toNum(d.total);
 
-    /* ✅ اطلاعات کارت از تنظیمات جاری خوانده می‌شود */
     const cardNumber = (B.db.settings.cardNumber || '').trim();
     const cardHolder = (B.db.settings.cardHolder || '').trim();
     const paymentBlock = (cardNumber || cardHolder) ? `
@@ -117,7 +115,6 @@
       <div class="inv-sign">مهر و امضا</div>`;
   }
 
-  /* ---------- پیش‌نمایش زنده ---------- */
   function renderPreview() {
     const box = $('#invoicePreview');
     if (!box) return null;
@@ -132,9 +129,12 @@
     const tax = Math.round((subtotal - discount) * taxPercent / 100);
     const total = subtotal - discount + tax;
 
+    const dateInput = $('#invDate')?.value || todayJalaliInput();
+    const dateISO = jalaliToGregorianIso(dateInput);
+
     const data = {
       number: `${B.db.settings.prefix}-${B.db.settings.next}`,
-      date: $('#invDate')?.value || todayISO(),
+      date: dateISO,
       customerName: customer ? customer.name : '—',
       customerPhone: customer ? customer.phone : '',
       customerAddress: customer ? customer.address : '',
@@ -152,7 +152,6 @@
     return data;
   }
 
-  /* ---------- جدول فاکتورهای صادرشده ---------- */
   function renderList() {
     const tbody = $('#invoicesBody');
     if (!tbody) return;
@@ -177,7 +176,6 @@
       </tr>`).join('');
   }
 
-  /* ---------- ذخیره فاکتور و ثبت درآمد ---------- */
   function save() {
     const customerId = $('#invCustomer')?.value || '';
     const customer = B.db.customers.find(c => c.id === customerId);
@@ -212,8 +210,8 @@
 
     const itemsBody = $('#itemsBody');
     if (itemsBody) itemsBody.innerHTML = '';
-    if ($('#invDiscount')) $('#invDiscount').value = '0';
-    if ($('#invTax')) $('#invTax').value = '0';
+    if ($('#invDiscount')) $('#invDiscount').value = '۰';
+    if ($('#invTax')) $('#invTax').value = '۰';
     if ($('#invNote')) $('#invNote').value = '';
     addRow();
 
@@ -221,9 +219,6 @@
     toast('فاکتور ذخیره و درآمد آن ثبت شد');
   }
 
-  /* ============================================================
-     استایل مستقل سند چاپ (برای دانلود یا iframe)
-     ============================================================ */
   function getPrintStyles() {
     return `
       * { box-sizing: border-box; }
@@ -286,9 +281,6 @@
     `;
   }
 
-  /* ============================================================
-     ساخت سند HTML کامل و مستقل (برای دانلود)
-     ============================================================ */
   function buildStandaloneHTML(inv) {
     return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -327,9 +319,6 @@ body { padding: 20px; }
 </html>`;
   }
 
-  /* ============================================================
-     نوار ابزار چاپ
-     ============================================================ */
   function showPrintBar(inv) {
     let bar = document.getElementById('printBar');
     if (!bar) {
@@ -346,17 +335,13 @@ body { padding: 20px; }
 
     document.getElementById('pbPrint').onclick = () => {
       try { window.print(); }
-      catch (e) { console.error(e); toast('چاپ ممکن نشد — از دانلود استفاده کنید'); }
+      catch (e) { toast('چاپ ممکن نشد — از دانلود استفاده کنید'); }
     };
 
     document.getElementById('pbDownload').onclick = () => downloadInvoiceHTML(inv);
-
     document.getElementById('pbClose').onclick = () => exitPrintPreview();
   }
 
-  /* ============================================================
-     دانلود فایل HTML مستقل
-     ============================================================ */
   function downloadInvoiceHTML(inv) {
     try {
       const html = buildStandaloneHTML(inv);
@@ -370,14 +355,10 @@ body { padding: 20px; }
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       toast('فایل فاکتور دانلود شد — آن را در مرورگر باز کنید و چاپ بزنید');
     } catch (e) {
-      console.error(e);
       toast('امکان دانلود فایل فاکتور نیست');
     }
   }
 
-  /* ============================================================
-     خروج از حالت پیش‌نمایش
-     ============================================================ */
   function exitPrintPreview() {
     document.body.classList.remove('print-preview');
     const bar = document.getElementById('printBar');
@@ -386,43 +367,24 @@ body { padding: 20px; }
     if (area) area.innerHTML = '';
   }
 
-  /* ============================================================
-     چاپ فاکتور — پیش‌نمایش تمام‌صفحه + چاپ خودکار + دانلود
-     ============================================================ */
   function print(id) {
     const inv = B.db.invoices.find(x => x.id === id);
     if (!inv) return toast('فاکتور یافت نشد');
 
     closeModal();
-
     const area = $('#printArea');
     if (!area) return toast('ناحیه چاپ یافت نشد');
 
-    /* ۱. قرار دادن محتوا */
     area.innerHTML = `<div class="invoice-paper">${buildHTML(inv)}</div>`;
-
-    /* ۲. باز کردن حالت پیش‌نمایش */
     document.body.classList.add('print-preview');
-
-    /* ۳. نمایش نوار ابزار */
     showPrintBar(inv);
-
-    /* ۴. اسکرول به بالا */
     window.scrollTo(0, 0);
 
-    /* ۵. تلاش برای چاپ خودکار با تأخیر
-       (اگر مرورگر پشتیبانی کند، پنجره چاپ باز می‌شود؛
-        اگر نه، کاربر از دکمه «چاپ» نوار ابزار استفاده می‌کند) */
     setTimeout(() => {
-      try {
-        window.print();
-      } catch (e) {
-        console.warn('window.print پشتیبانی نمی‌شود؛ از دکمه چاپ نوار ابزار استفاده کنید');
-      }
+      try { window.print(); } catch (e) {}
     }, 800);
   }
 
-  /* ---------- مشاهده در مودال ---------- */
   function view(id) {
     const inv = B.db.invoices.find(x => x.id === id);
     if (!inv) return;
@@ -439,7 +401,6 @@ body { padding: 20px; }
     });
   }
 
-  /* ---------- حذف فاکتور ---------- */
   function remove(id) {
     if (!confirm('فاکتور و درآمد مرتبط با آن حذف شود؟')) return;
     B.db.invoices = B.db.invoices.filter(x => x.id !== id);

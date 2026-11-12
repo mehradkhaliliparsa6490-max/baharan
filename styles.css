@@ -534,3 +534,65 @@ body.print-preview #printBar .btn.danger{
   .logo{width:42px;height:42px;font-size:17px;border-radius:14px}
   .brand h1{font-size:13.5px}
 }
+
+
+/* ============================================================
+   صفحه ورود (Login)
+   ============================================================ */
+#loginView {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(140deg,#eef4ff 0%,#f6f0ff 45%,#e8faf6 100%);
+  padding: 20px;
+}
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: rgba(255,255,255,.9);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid #fff;
+  border-radius: 22px;
+  padding: 28px 24px;
+  box-shadow: 0 20px 60px rgba(31,45,80,.15);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-card h2 { margin: 0; font-size: 18px; font-weight: 800; }
+.login-card input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 4px;
+  padding: 14px;
+}
+.login-card .error {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+  margin-top: -6px;
+}
+
+/* ============================================================
+   ورودی تاریخ شمسی (شبیه‌سازی)
+   ============================================================ */
+.jalali-date {
+  font-family: inherit;
+  direction: ltr;
+  text-align: right;
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   ورودی اعداد فارسی
+   ============================================================ */
+.num-input {
+  font-family: inherit;
+  text-align: center;
+}

@@ -1,5 +1,5 @@
 /* ============================================================
-   dashboard.js — آمار کلی، نوبت‌های در انتظار و آخرین درآمدها
+   dashboard.js — آمار کلی و نوبت‌های در انتظار
    ============================================================ */
 (function (B) {
   'use strict';
@@ -50,23 +50,6 @@
               <td>${jalali(s.date)}</td>
             </tr>`).join('')
         : '<tr><td colspan="4" class="empty">نوبت در انتظاری وجود ندارد.</td></tr>';
-    }
-
-    /* ---------- آخرین درآمدها (شرح کوچک‌تر) ---------- */
-    const dashFinance = $('#dashFinance');
-    if (dashFinance) {
-      const lastFin = [...B.db.finances]
-        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
-        .slice(0, 5);
-
-      dashFinance.innerHTML = lastFin.length
-        ? lastFin.map(f => `
-            <tr>
-              <td class="wrap-cell dash-desc" title="${esc(f.title)}">${esc(f.title)}</td>
-              <td><strong>${money(f.amount)}</strong></td>
-              <td>${jalali(f.date)}</td>
-            </tr>`).join('')
-        : '<tr><td colspan="3" class="empty">درآمدی ثبت نشده است.</td></tr>';
     }
   }
 

@@ -1,32 +1,30 @@
 /* ============================================================
-   public-form.js — نمایش/مخفی کردن فرم عمومی + ثبت درخواست
+   public-form.js — فرم عمومی با تاریخ شمسی
    ============================================================ */
 (function (B) {
   'use strict';
 
-  const { $, toFa, normDigits, uid, todayISO, toast } = B.utils;
+  const { $, toFa, normDigits, uid, todayISO, todayJalaliInput,
+          jalaliToGregorianIso } = B.utils;
   const { saveDB, ensureCustomer } = B.storage;
 
-  /* ---------- نمایش فرم عمومی ---------- */
   function show() {
     $('#publicView').classList.remove('hidden');
     $('#appView').classList.add('hidden');
     const d = $('#pubDate');
-    if (d && !d.value) d.value = todayISO();
+    if (d && !d.value) d.value = todayJalaliInput();
   }
 
-  /* ---------- نمایش پنل مدیریت ---------- */
   function showApp() {
     $('#publicView').classList.add('hidden');
     $('#appView').classList.remove('hidden');
     const invDate = $('#invDate');
-    if (invDate && !invDate.value) invDate.value = todayISO();
+    if (invDate && !invDate.value) invDate.value = todayJalaliInput();
     B.ui.renderAll();
     const itemsBody = $('#itemsBody');
     if (itemsBody && !itemsBody.children.length) B.invoices.addRow();
   }
 
-  /* ---------- اتصال رویدادهای فرم عمومی ---------- */
   function bindSubmit() {
     $('#publicForm')?.addEventListener('submit', e => {
       e.preventDefault();
@@ -34,18 +32,18 @@
       const name = $('#pubName').value.trim();
       const phone = $('#pubPhone').value.trim();
       const service = $('#pubService').value.trim();
-      const date = $('#pubDate').value || todayISO();
+      const dateISO = jalaliToGregorianIso($('#pubDate').value);
       const note = $('#pubNote').value.trim();
 
-      if (!name) return toast('نام خود را وارد کنید');
-      if (normDigits(phone).length < 8) return toast('شماره تماس معتبر نیست');
-      if (!service) return toast('خدمت درخواستی را وارد کنید');
+      if (!name) return B.utils.toast('نام خود را وارد کنید');
+      if (normDigits(phone).length < 8) return B.utils.toast('شماره تماس معتبر نیست');
+      if (!service) return B.utils.toast('خدمت درخواستی را وارد کنید');
 
       const { customer } = ensureCustomer(name, phone);
 
       B.db.services.push({
         id: uid(), customerId: customer.id,
-        name, phone, service, date, note,
+        name, phone, service, date: dateISO, note,
         done: false, source: 'online', createdAt: Date.now()
       });
       saveDB();
@@ -71,21 +69,20 @@
         form.classList.remove('hidden');
         form.reset();
         const d = $('#pubDate');
-        if (d) d.value = todayISO();
+        if (d) d.value = todayJalaliInput();
         $('#pubName').focus();
       };
 
-      toast('درخواست شما با موفقیت ثبت شد');
+      B.utils.toast('درخواست شما با موفقیت ثبت شد');
     });
 
-    /* بازگشت از فرم عمومی به پنل */
     $('#backToApp')?.addEventListener('click', e => {
       e.preventDefault();
       try {
         const clean = location.href.split('?')[0].split('#')[0];
         history.replaceState(null, '', clean);
-      } catch (_) { /* نادیده */ }
-      showApp();
+      } catch (_) {}
+      window.location.reload();
     });
   }
 

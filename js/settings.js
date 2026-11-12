@@ -17,9 +17,8 @@
     if (p && document.activeElement !== p) p.value = B.db.settings.prefix;
 
     const n = $('#setNext');
-    if (n && document.activeElement !== n) n.value = B.db.settings.next;
+    if (n && document.activeElement !== n) n.value = B.utils.toFa(B.db.settings.next);
 
-    /* ✅ فیلدهای کارت */
     const cn = $('#setCardNumber');
     if (cn && document.activeElement !== cn) cn.value = B.db.settings.cardNumber || '';
 
@@ -34,7 +33,6 @@
   }
 
   function bindActions() {
-    /* ذخیره تنظیمات */
     $('#btnSaveSettings')?.addEventListener('click', () => {
       const prefix = ($('#setPrefix')?.value || '').trim() || 'BH';
       const next = Math.max(1, Math.floor(toNum($('#setNext')?.value) || 1));
@@ -49,7 +47,6 @@
       toast('تنظیمات ذخیره شد');
     });
 
-    /* کپی لینک عمومی */
     $('#btnCopyLink')?.addEventListener('click', async () => {
       const input = $('#publicLinkInput');
       if (!input) return;
@@ -64,7 +61,6 @@
       }
     });
 
-    /* دانلود پشتیبان */
     $('#btnBackup')?.addEventListener('click', () => {
       try {
         const blob = new Blob([JSON.stringify(B.db, null, 2)], { type: 'application/json' });
@@ -81,7 +77,6 @@
       }
     });
 
-    /* بازیابی از فایل */
     $('#restoreFile')?.addEventListener('change', e => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;

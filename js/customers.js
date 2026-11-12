@@ -1,14 +1,14 @@
 /* ============================================================
-   customers.js — جدول مشتریان + فرم + اقلام مصرفی
+   customers.js — مشتریان و اقلام مصرفی با تاریخ شمسی
    ============================================================ */
 (function (B) {
   'use strict';
 
-  const { $, $$, toFa, esc, normDigits, uid, todayISO, tsToISO, jalali, toast } = B.utils;
+  const { $, $$, toFa, esc, normDigits, uid, todayISO, todayJalaliInput,
+          tsToISO, jalali, jalaliToGregorianIso, gregorianToJalaliStr } = B.utils;
   const { openModal, closeModal, bindEnter, renderAll } = B.ui;
   const { saveDB } = B.storage;
 
-  /* ---------- پر کردن select فاکتور و datalist ---------- */
   function renderOptions() {
     const sel = $('#invCustomer');
     if (sel) {
@@ -27,7 +27,6 @@
     }
   }
 
-  /* ---------- جدول مشتریان ---------- */
   function render() {
     const tbody = $('#customersBody');
     if (!tbody) return;
@@ -63,10 +62,8 @@
     }).join('');
   }
 
-  /* ---------- فرم مشتری ---------- */
   function openForm(id) {
     const c = id ? B.db.customers.find(x => x.id === id) : null;
-
     openModal(c ? 'ویرایش مشتری' : 'ثبت مشتری جدید', `
       <form id="customerForm" novalidate>
         <div class="grid">
@@ -121,7 +118,6 @@
     });
   }
 
-  /* ---------- اقلام مصرفی ---------- */
   function openConsumables(customerId) {
     const c = B.db.customers.find(x => x.id === customerId);
     if (!c) return;
@@ -155,7 +151,10 @@
         <div class="grid">
           <div><label>عنوان قلم *</label><input id="csTitle" placeholder="مثلاً فیلتر شنی"></div>
           <div><label>مقدار</label><input id="csQty" placeholder="مثلاً ۲ عدد"></div>
-          <div><label>تاریخ</label><input id="csDate" type="date" value="${todayISO()}"></div>
+          <div>
+            <label>تاریخ (شمسی)</label>
+            <input id="csDate" class="jalali-date" value="${todayJalaliInput()}" placeholder="۱۴۰۳/۰۱/۰۱" dir="ltr" style="text-align:right">
+          </div>
           <div><label>توضیح</label><input id="csNote" placeholder="اختیاری"></div>
         </div>
         <div class="form-actions">
@@ -167,10 +166,11 @@
       $('#csAdd').onclick = () => {
         const title = $('#csTitle').value.trim();
         if (!title) return toast('عنوان قلم را وارد کنید');
+        const dateISO = jalaliToGregorianIso($('#csDate').value);
         c.consumables.push({
           id: uid(), title,
           qty: $('#csQty').value.trim() || '۱',
-          date: $('#csDate').value || todayISO(),
+          date: dateISO,
           note: $('#csNote').value.trim()
         });
         saveDB();
@@ -193,7 +193,6 @@
     });
   }
 
-  /* ---------- حذف مشتری ---------- */
   function remove(id) {
     const c = B.db.customers.find(x => x.id === id);
     if (!c) return;

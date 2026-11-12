@@ -1,14 +1,14 @@
 /* ============================================================
-   services.js — جدول خدمات + فرم ثبت/ویرایش
+   services.js — جدول خدمات با تاریخ شمسی در فرم
    ============================================================ */
 (function (B) {
   'use strict';
 
-  const { $, toFa, esc, normDigits, uid, todayISO, jalali, toast } = B.utils;
+  const { $, toFa, esc, normDigits, uid, todayISO, todayJalaliInput,
+          jalali, jalaliToGregorianIso, gregorianToJalaliStr } = B.utils;
   const { openModal, closeModal, bindEnter, renderAll } = B.ui;
   const { saveDB, ensureCustomer } = B.storage;
 
-  /* ---------- جدول خدمات (اولویت بر اساس زمان ثبت) ---------- */
   function render() {
     const tbody = $('#servicesBody');
     if (!tbody) return;
@@ -66,9 +66,9 @@
     }).join('');
   }
 
-  /* ---------- فرم خدمت ---------- */
   function openForm(id) {
     const s = id ? B.db.services.find(x => x.id === id) : null;
+    const dateValue = s ? gregorianToJalaliStr(s.date) : todayJalaliInput();
 
     openModal(s ? 'ویرایش خدمت' : 'ثبت خدمت جدید', `
       <form id="serviceForm" novalidate>
@@ -88,8 +88,8 @@
             <input id="sService" value="${esc(s ? s.service : '')}" placeholder="مثلاً سرویس دستگاه">
           </div>
           <div>
-            <label>تاریخ درخواست</label>
-            <input id="sDate" type="date" value="${esc(s ? s.date : todayISO())}">
+            <label>تاریخ درخواست (شمسی)</label>
+            <input id="sDate" class="jalali-date" value="${dateValue}" placeholder="۱۴۰۳/۰۱/۰۱" dir="ltr" style="text-align:right">
           </div>
         </div>
         <div style="margin-top:14px">
@@ -125,7 +125,7 @@
         const name = $('#sName').value.trim();
         const phone = $('#sPhone').value.trim();
         const service = $('#sService').value.trim();
-        const date = $('#sDate').value || todayISO();
+        const dateISO = jalaliToGregorianIso($('#sDate').value);
         const note = $('#sNote').value.trim();
         const done = $('#sDone').checked;
 
@@ -136,11 +136,11 @@
         const { customer, created } = ensureCustomer(name, phone);
 
         if (s) {
-          Object.assign(s, { customerId: customer.id, name, phone, service, date, note, done });
+          Object.assign(s, { customerId: customer.id, name, phone, service, date: dateISO, note, done });
         } else {
           B.db.services.push({
             id: uid(), customerId: customer.id,
-            name, phone, service, date, note, done,
+            name, phone, service, date: dateISO, note, done,
             source: 'manual', createdAt: Date.now()
           });
         }
@@ -157,7 +157,6 @@
     });
   }
 
-  /* ---------- تغییر وضعیت انجام‌شده ---------- */
   function toggle(id) {
     const s = B.db.services.find(x => x.id === id);
     if (!s) return;
@@ -167,7 +166,6 @@
     toast(s.done ? 'خدمت انجام‌شده ثبت شد' : 'خدمت به حالت در انتظار بازگشت');
   }
 
-  /* ---------- حذف خدمت ---------- */
   function remove(id) {
     if (!confirm('این خدمت حذف شود؟')) return;
     B.db.services = B.db.services.filter(x => x.id !== id);

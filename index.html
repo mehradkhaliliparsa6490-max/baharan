@@ -10,10 +10,24 @@
 </head>
 <body>
 
-<!-- حباب‌های تزئینی پس‌زمینه -->
 <div class="blob b1"></div>
 <div class="blob b2"></div>
 <div class="blob b3"></div>
+
+<!-- ============================================================
+     صفحه ورود (Login)
+     ============================================================ -->
+<div id="loginView" class="hidden">
+  <div class="login-card">
+    <div class="logo" style="margin:0 auto 14px">ب</div>
+    <h2>ورود به پنل مدیریت</h2>
+    <p class="muted small">لطفاً رمز عبور خود را وارد کنید</p>
+    <input type="password" id="loginPass" placeholder="••••••" autocomplete="current-password">
+    <div id="loginError" class="error">رمز عبور اشتباه است</div>
+    <button type="button" class="btn primary" id="btnLogin" style="width:100%">ورود</button>
+    <p class="small muted" style="margin-top:8px">رمز پیش‌فرض: <strong>123456</strong></p>
+  </div>
+</div>
 
 <!-- ============================================================
      نمایش عمومی: فرم ثبت درخواست مشتری
@@ -49,8 +63,8 @@
             <input id="pubService" placeholder="مثلاً نصب و راه‌اندازی دستگاه تصفیه">
           </div>
           <div>
-            <label>تاریخ درخواستی</label>
-            <input id="pubDate" type="date">
+            <label>تاریخ درخواستی (شمسی)</label>
+            <input id="pubDate" class="jalali-date" placeholder="۱۴۰۳/۰۱/۰۱" dir="ltr" style="text-align:right">
           </div>
         </div>
         <div style="margin-top:14px">
@@ -66,7 +80,7 @@
     </div>
 
     <p class="center small" style="margin:16px 0 30px">
-      <a href="#" id="backToApp">ورود به پنل مدیریت</a>
+      <a href="index.html" id="backToApp">ورود به پنل مدیریت</a>
     </p>
   </div>
 </div>
@@ -74,7 +88,7 @@
 <!-- ============================================================
      پنل مدیریت
      ============================================================ -->
-<div id="appView">
+<div id="appView" class="hidden">
   <div class="wrap">
 
     <header class="top">
@@ -87,6 +101,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn ghost sm" id="btnOpenPublic">فرم درخواست مشتری</button>
+        <button class="btn danger sm" id="btnLogout">خروج</button>
       </div>
     </header>
 
@@ -103,27 +118,18 @@
       <!-- ============ داشبورد ============ -->
       <section class="tab-panel" id="tab-dashboard">
         <div class="stats" id="stats"></div>
-        <div class="grid2">
-          <div class="card">
-            <div class="card-head">
-              <h2>نوبت‌های در انتظار</h2>
-              <span class="hint">اولویت بر اساس زمان ثبت</span>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>اولویت</th><th>مشتری</th><th>خدمت</th><th>تاریخ</th></tr></thead>
-                <tbody id="dashServices"></tbody>
-              </table>
-            </div>
+        
+        <!-- جدول آخرین درآمدها حذف شد، فقط نوبت‌های در انتظار ماند -->
+        <div class="card">
+          <div class="card-head">
+            <h2>نوبت‌های در انتظار</h2>
+            <span class="hint">اولویت بر اساس زمان ثبت</span>
           </div>
-          <div class="card">
-            <div class="card-head"><h2>آخرین درآمدها</h2></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>شرح</th><th>مبلغ</th><th>تاریخ</th></tr></thead>
-                <tbody id="dashFinance"></tbody>
-              </table>
-            </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>اولویت</th><th>مشتری</th><th>خدمت</th><th>تاریخ</th></tr></thead>
+              <tbody id="dashServices"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -214,7 +220,10 @@
 
           <div class="grid">
             <div><label>مشتری *</label><select id="invCustomer"></select></div>
-            <div><label>تاریخ فاکتور</label><input id="invDate" type="date"></div>
+            <div>
+              <label>تاریخ فاکتور (شمسی)</label>
+              <input id="invDate" class="jalali-date" placeholder="۱۴۰۳/۰۱/۰۱" dir="ltr" style="text-align:right">
+            </div>
           </div>
 
           <div style="margin-top:16px">
@@ -237,8 +246,8 @@
           </div>
 
           <div class="grid" style="margin-top:16px">
-            <div><label>تخفیف (تومان)</label><input id="invDiscount" type="number" min="0" step="1000" value="0"></div>
-            <div><label>مالیات (درصد)</label><input id="invTax" type="number" min="0" step="1" value="0"></div>
+            <div><label>تخفیف (تومان)</label><input id="invDiscount" class="num-input" type="text" inputmode="numeric" value="۰"></div>
+            <div><label>مالیات (درصد)</label><input id="invTax" class="num-input" type="text" inputmode="numeric" value="۰"></div>
           </div>
 
           <div style="margin-top:14px">
@@ -295,16 +304,14 @@
           </div>
         </div>
 
-        < class="card">
+        <div class="card">
           <div class="card-head"><h2>تنظیمات فاکتور</h2></div>
           <div class="grid">
             <div><label>پیشوند شماره فاکتور</label><input id="setPrefix" placeholder="BH"></div>
-            <div><label>شماره فاکتور بعدی</label><input id="setNext" type="number" min="1" step="1"></div>
-             <div><label>شماره کارت</label><input id="setCardNumber" placeholder="6037-9975-1234-5678" dir="ltr"></div>
-    <div><label>صاحب کارت</label><input id="setCardHolder" placeholder="نام صاحب کارت"></div>
-  </div>
-          
-      </div>
+            <div><label>شماره فاکتور بعدی</label><input id="setNext" class="num-input" type="text" inputmode="numeric"></div>
+            <div><label>شماره کارت</label><input id="setCardNumber" placeholder="6037-9975-1234-5678" dir="ltr"></div>
+            <div><label>صاحب کارت</label><input id="setCardHolder" placeholder="نام صاحب کارت"></div>
+          </div>
           <div class="form-actions">
             <button class="btn primary" id="btnSaveSettings">ذخیره تنظیمات</button>
           </div>
@@ -339,16 +346,9 @@
   </div>
 </div>
 
-<!-- ناحیه چاپ -->
 <div id="printArea"></div>
-
-<!-- پیام شناور -->
 <div id="toast" role="status" aria-live="polite"></div>
 
-<!-- ============================================================
-     اسکریپت‌ها — ترتیب بارگذاری مهم است!
-     utils → storage → ui → بقیه ماژول‌ها → app
-     ============================================================ -->
 <script src="js/utils.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
